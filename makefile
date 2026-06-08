@@ -39,6 +39,7 @@ classes:
 		-d $(CLASSES_DIR) \
 		$(SOURCES)
 	@if [ -d $(SRC_DIR)/astrogeist/icons ]; then cp -r $(SRC_DIR)/astrogeist/icons $(CLASSES_DIR)/icons; fi
+	@if [ -d $(SRC_DIR)/resources ]; then cp -r $(SRC_DIR)/resources $(CLASSES_DIR)/; fi
 
 jar: classes
 	mkdir -p $(APP_DIR)
