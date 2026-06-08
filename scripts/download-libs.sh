@@ -4,6 +4,7 @@ set -e
 FLATLAF_VERSION="3.4.1"
 JSVG_VERSION="1.7.2"
 JUNIT_VERSION="1.10.2"
+NOMTAM_VERSION="1.20.2"
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -37,6 +38,10 @@ download "flatlaf-extras-${FLATLAF_VERSION}.jar" \
 
 download "jsvg-${JSVG_VERSION}.jar" \
     "$MAVEN/com/github/weisj/jsvg/${JSVG_VERSION}/jsvg-${JSVG_VERSION}.jar" \
+    "$LIB_DIR"
+
+download "nom-tam-fits-${NOMTAM_VERSION}.jar" \
+    "$MAVEN/gov/nasa/gsfc/heasarc/nom-tam-fits/${NOMTAM_VERSION}/nom-tam-fits-${NOMTAM_VERSION}.jar" \
     "$LIB_DIR"
 
 download "junit-platform-console-standalone-${JUNIT_VERSION}.jar" \

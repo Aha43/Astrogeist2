@@ -19,19 +19,23 @@ class ConfigurableScannerTest {
         root = Files.createTempDirectory("astrogeist-test");
         config = new ScannerConfigReader().readBuiltin("SharpCap");
 
+        // Real SharpCap format: [Camera Name] section header + Key=Value pairs
         createSession("2023-07-15_22_30_45", """
-                [Camera]
+                [ZWO ASI533MC-Pro]
                 Gain=100
-                Exposure=50000
+                ExposureMs=50000
                 Binning=1
                 FPS=10.5
                 FrameCount=500
+                Temperature=-10.2
+                Capture Area=3008x3008
+                SharpCapVersion=4.2.1
                 """);
 
         createSession("2023-07-16_21_15_00", """
-                [Camera]
+                [ZWO ASI294MC-Pro]
                 Gain=200
-                Exposure=30000
+                ExposureMs=30000
                 Binning=2
                 FPS=25.0
                 FrameCount=300
@@ -79,8 +83,22 @@ class ConfigurableScannerTest {
     }
 
     @Test
+    void extractsCameraFromSectionHeader() throws IOException {
+        var snapshot = new ConfigurableScanner(config).scan(root).get(0);
+        assertEquals("ZWO ASI533MC-Pro", snapshot.raw("camera"));
+    }
+
+    @Test
+    void extractsTemperatureAndResolution() throws IOException {
+        var snapshot = new ConfigurableScanner(config).scan(root).get(0);
+        assertEquals("-10.2", snapshot.raw("temperature"));
+        assertEquals("3008x3008", snapshot.raw("resolution"));
+    }
+
+    @Test
     void extractsAllExpectedFields() throws IOException {
         var snapshot = new ConfigurableScanner(config).scan(root).get(0);
+        assertNotNull(snapshot.raw("camera"));
         assertNotNull(snapshot.raw("gain"));
         assertNotNull(snapshot.raw("exposure_ms"));
         assertNotNull(snapshot.raw("binning"));

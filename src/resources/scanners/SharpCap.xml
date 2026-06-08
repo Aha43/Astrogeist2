@@ -1,22 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<scanner name="SharpCap" version="1">
+<scanner name="SharpCap" version="2">
 
+  <!-- Session folders are named YYYY-MM-DD_HH_mm_ss -->
   <folderPattern regex="\d{4}-\d{2}-\d{2}_\d{2}_\d{2}_\d{2}"/>
 
   <timestamp source="folderName"
              pattern="\d{4}-\d{2}-\d{2}_\d{2}_\d{2}_\d{2}"
              format="yyyy-MM-dd_HH_mm_ss"/>
 
-  <fileParser filePattern="CameraSettings\.txt" format="keyvalue" separator="=">
-    <field src="Gain"        key="gain"/>
-    <field src="Exposure"    key="exposure_ms"/>
-    <field src="Binning"     key="binning"/>
-    <field src="FPS"         key="fps"/>
-    <field src="FrameCount"  key="frame_count"/>
+  <!-- CameraSettings.txt: first line is [Camera Name], rest are Key=Value -->
+  <fileParser filePattern=".*CameraSettings\.txt" format="keyvalue" separator="=">
+    <field src="$section"           key="camera"/>
+    <field src="Gain"               key="gain"/>
+    <field src="ExposureMs"         key="exposure_ms"/>
+    <field src="Exposure"           key="exposure_ms"/>
+    <field src="Binning"            key="binning"/>
+    <field src="FPS"                key="fps"/>
+    <field src="FrameCount"         key="frame_count"/>
+    <field src="Temperature"        key="temperature"/>
+    <field src="Stars"              key="stars"/>
+    <field src="Capture Area"       key="resolution"/>
+    <field src="SharpCapVersion"    key="software"/>
   </fileParser>
 
   <fileParser filePattern=".*\.ser" format="filename" separator="">
     <field src="filename" key="ser_file"/>
+  </fileParser>
+
+  <fileParser filePattern=".*\.(fit|fits|FIT|FITS)" format="filename" separator="">
+    <field src="filename" key="fit_file"/>
+  </fileParser>
+
+  <fileParser filePattern=".*\.(tif|tiff|TIF|TIFF)" format="filename" separator="">
+    <field src="filename" key="tif_file"/>
   </fileParser>
 
 </scanner>
