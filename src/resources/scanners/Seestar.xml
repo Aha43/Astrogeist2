@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<scanner name="Seestar" version="1">
+
+  <!--
+    Seestar S50 saves sessions in date-named folders: YYYY-MM-DD
+    Point the scanner at the root output directory.
+    Timestamp is taken from the folder modification time (closest proxy
+    to session start; will be refined in a later sprint to use DATE-OBS).
+  -->
+  <folderPattern regex="\d{4}-\d{2}-\d{2}"/>
+
+  <timestamp source="folderMtime"
+             pattern=""
+             format=""/>
+
+  <!-- Extract metadata from FITS/FIT headers -->
+  <fileParser filePattern=".*\.(fit|fits|FIT|FITS)" format="fits-header" separator="">
+    <field src="DATE-OBS"  key="date_obs"/>
+    <field src="EXPTIME"   key="exposure_s"/>
+    <field src="GAIN"      key="gain"/>
+    <field src="FILTER"    key="filter"/>
+    <field src="OBJECT"    key="subject"/>
+    <field src="INSTRUME"  key="telescope"/>
+    <field src="XBINNING"  key="binning"/>
+    <field src="CCD-TEMP"  key="temperature"/>
+    <field src="NAXIS1"    key="resolution"/>
+  </fileParser>
+
+  <!-- Also record file names -->
+  <fileParser filePattern=".*\.(fit|fits|FIT|FITS)" format="filename" separator="">
+    <field src="filename" key="fit_file"/>
+  </fileParser>
+
+</scanner>

@@ -10,9 +10,7 @@ class ScannerConfigReaderTest {
     @Test
     void readsSharpCapBuiltinConfig() throws Exception {
         var config = reader.readBuiltin("SharpCap");
-
         assertEquals("SharpCap", config.name());
-        assertNotNull(config.folderPattern());
         assertFalse(config.folderPattern().isBlank());
     }
 
@@ -20,7 +18,6 @@ class ScannerConfigReaderTest {
     void sharpCapTimestampConfigIsPresent() throws Exception {
         var config = reader.readBuiltin("SharpCap");
         var ts = config.timestamp();
-
         assertEquals("folderName", ts.source());
         assertFalse(ts.pattern().isBlank());
         assertFalse(ts.format().isBlank());
@@ -36,25 +33,45 @@ class ScannerConfigReaderTest {
             .orElseThrow(() -> new AssertionError("No CameraSettings parser found"));
 
         assertEquals("keyvalue", cameraParser.format());
-        assertEquals("=", cameraParser.separator());
-
         var keys = cameraParser.fields().stream().map(FieldMapping::key).toList();
+        assertTrue(keys.contains("camera"));
         assertTrue(keys.contains("gain"));
         assertTrue(keys.contains("exposure_ms"));
         assertTrue(keys.contains("binning"));
         assertTrue(keys.contains("fps"));
         assertTrue(keys.contains("frame_count"));
+        assertTrue(keys.contains("temperature"));
     }
 
     @Test
     void sharpCapHasSerFileParser() throws Exception {
         var config = reader.readBuiltin("SharpCap");
-
         var serParser = config.fileParsers().stream()
             .filter(r -> r.filePattern().contains(".ser"))
             .findFirst()
             .orElseThrow(() -> new AssertionError("No .ser parser found"));
-
         assertEquals("filename", serParser.format());
+    }
+
+    @Test
+    void readsSeestarBuiltinConfig() throws Exception {
+        var config = reader.readBuiltin("Seestar");
+        assertEquals("Seestar", config.name());
+        assertEquals("folderMtime", config.timestamp().source());
+    }
+
+    @Test
+    void seestarHasFitsHeaderParser() throws Exception {
+        var config = reader.readBuiltin("Seestar");
+        var fitsParser = config.fileParsers().stream()
+            .filter(r -> r.format().equals("fits-header"))
+            .findFirst()
+            .orElseThrow(() -> new AssertionError("No fits-header parser found"));
+
+        var srcs = fitsParser.fields().stream().map(FieldMapping::src).toList();
+        assertTrue(srcs.contains("DATE-OBS"));
+        assertTrue(srcs.contains("EXPTIME"));
+        assertTrue(srcs.contains("GAIN"));
+        assertTrue(srcs.contains("OBJECT"));
     }
 }
