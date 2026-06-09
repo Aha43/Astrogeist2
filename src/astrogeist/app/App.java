@@ -1,6 +1,7 @@
 package astrogeist.app;
 
 import astrogeist.persist.AppSettings;
+import astrogeist.persist.XmlScanTargetsStore;
 import astrogeist.persist.XmlSettingsStore;
 import astrogeist.persist.XmlUserDataStore;
 import astrogeist.scanner.ConfigurableScanner;
@@ -21,9 +22,10 @@ public final class App {
     private App() {}
 
     public static void launch(boolean demoMode) {
-        var settingsStore = new XmlSettingsStore(Resources.resolve("settings.xml"));
-        var settings      = settingsStore.load();
-        var userDataStore = new XmlUserDataStore(Resources.resolve("userdata"));
+        var settingsStore     = new XmlSettingsStore(Resources.resolve("settings.xml"));
+        var settings          = settingsStore.load();
+        var userDataStore     = new XmlUserDataStore(Resources.resolve("userdata"));
+        var scanTargetsStore  = new XmlScanTargetsStore(Resources.resolve("scan-targets.xml"));
 
         var selectionService = new SnapshotSelectionService();
         var timelinePanel    = new TimelineTablePanel(selectionService);
@@ -36,8 +38,8 @@ public final class App {
             settingsStore.save(settings);
         });
 
-        var toolbarFactory = new ToolBarFactory(timelinePanel, settings, settingsStore);
-        var menuBarFactory = new MenuBarFactory(timelinePanel, settings, settingsStore);
+        var toolbarFactory = new ToolBarFactory(timelinePanel, settings, settingsStore, scanTargetsStore);
+        var menuBarFactory = new MenuBarFactory(timelinePanel, settings, settingsStore, scanTargetsStore);
 
         Consumer<Boolean> applyDense = dense -> {
             timelinePanel.setDense(dense);
