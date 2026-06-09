@@ -6,13 +6,19 @@ import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 public final class ToolBarFactory {
+
+    private record LabeledButton(JButton button, String label) {}
 
     private final TimelineTablePanel timelinePanel;
     private final AppSettings settings;
     private final XmlSettingsStore settingsStore;
+    private Consumer<Boolean> onDenseChange = dense -> {};
+    private final List<LabeledButton> labeledButtons = new ArrayList<>();
 
     public ToolBarFactory(TimelineTablePanel timelinePanel, AppSettings settings,
                           XmlSettingsStore settingsStore) {
@@ -21,33 +27,41 @@ public final class ToolBarFactory {
         this.settingsStore = settingsStore;
     }
 
+    public void setOnDenseChange(Consumer<Boolean> c) { this.onDenseChange = c; }
+
+    public void setDense(boolean dense) {
+        for (var lb : labeledButtons) lb.button().setText(dense ? null : lb.label());
+    }
+
     public JToolBar build(JFrame owner) {
         var bar = new JToolBar();
         bar.setFloatable(false);
 
-        var scanBtn = makeButton("telescope.svg", "Scan (⌘O)");
+        var scanBtn = makeButton("telescope.svg", "Scan", "Scan (⌘O)");
         scanBtn.addActionListener(e -> scan(owner));
         bar.add(scanBtn);
 
-        var settingsBtn = makeButton("settings.svg", "Settings (⌘,)");
-        settingsBtn.addActionListener(e -> SettingsDialog.show(owner, settings, settingsStore, timelinePanel));
+        var settingsBtn = makeButton("settings.svg", "Settings", "Settings (⌘,)");
+        settingsBtn.addActionListener(e -> SettingsDialog.show(owner, settings, settingsStore, onDenseChange));
         bar.add(settingsBtn);
 
         bar.add(Box.createHorizontalGlue());
 
-        var exitBtn = makeButton("door-exit.svg", "Exit");
+        var exitBtn = makeButton("door-exit.svg", "Exit", "Exit");
         exitBtn.addActionListener(e -> System.exit(0));
         bar.add(exitBtn);
 
         return bar;
     }
 
-    private JButton makeButton(String iconFile, String tooltip) {
+    private JButton makeButton(String iconFile, String label, String tooltip) {
         var url  = getClass().getResource("/icons/" + iconFile);
         var icon = url != null ? new FlatSVGIcon(url).derive(16, 16) : null;
-        var btn  = new JButton(icon);
+        var btn  = new JButton(label, icon);
+        btn.setHorizontalTextPosition(SwingConstants.RIGHT);
         btn.setToolTipText(tooltip);
         btn.setFocusable(false);
+        labeledButtons.add(new LabeledButton(btn, label));
         return btn;
     }
 

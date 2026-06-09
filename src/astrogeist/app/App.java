@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.*;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public final class App {
 
@@ -30,11 +31,22 @@ public final class App {
         var annotationPanel  = new AnnotationPanel(userDataStore, selectionService);
 
         timelinePanel.setColumnWidths(settings.getColumnWidths());
-        timelinePanel.setDense(settings.isDenseMode());
         timelinePanel.onColumnWidthChange(widths -> {
             settings.setColumnWidths(widths);
             settingsStore.save(settings);
         });
+
+        var toolbarFactory = new ToolBarFactory(timelinePanel, settings, settingsStore);
+        var menuBarFactory = new MenuBarFactory(timelinePanel, settings, settingsStore);
+
+        Consumer<Boolean> applyDense = dense -> {
+            timelinePanel.setDense(dense);
+            toolbarFactory.setDense(dense);
+        };
+        toolbarFactory.setOnDenseChange(applyDense);
+        menuBarFactory.setOnDenseChange(applyDense);
+
+        applyDense.accept(settings.isDenseMode());
 
         var rightSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, metadataPanel, annotationPanel);
         rightSplit.setResizeWeight(0.6);
@@ -54,8 +66,8 @@ public final class App {
                 System.exit(0);
             }
         });
-        frame.setJMenuBar(new MenuBarFactory(timelinePanel, settings, settingsStore).build(frame));
-        frame.add(new ToolBarFactory(timelinePanel, settings, settingsStore).build(frame), BorderLayout.NORTH);
+        frame.setJMenuBar(menuBarFactory.build(frame));
+        frame.add(toolbarFactory.build(frame), BorderLayout.NORTH);
         frame.getContentPane().add(mainSplit);
         frame.setSize(1200, 750);
         frame.setLocationRelativeTo(null);

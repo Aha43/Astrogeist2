@@ -8,12 +8,14 @@ import astrogeist.scanner.ScannerConfigReader;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
+import java.util.function.Consumer;
 
 public final class MenuBarFactory {
 
     private final TimelineTablePanel timelinePanel;
     private final AppSettings settings;
     private final XmlSettingsStore settingsStore;
+    private Consumer<Boolean> onDenseChange = dense -> {};
 
     public MenuBarFactory(TimelineTablePanel timelinePanel, AppSettings settings,
                           XmlSettingsStore settingsStore) {
@@ -21,6 +23,8 @@ public final class MenuBarFactory {
         this.settings      = settings;
         this.settingsStore = settingsStore;
     }
+
+    public void setOnDenseChange(Consumer<Boolean> c) { this.onDenseChange = c; }
 
     public JMenuBar build(JFrame owner) {
         var bar = new JMenuBar();
@@ -41,7 +45,7 @@ public final class MenuBarFactory {
         var settingsItem = new JMenuItem("Settings…");
         settingsItem.setAccelerator(KeyStroke.getKeyStroke(
             KeyEvent.VK_COMMA, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        settingsItem.addActionListener(e -> SettingsDialog.show(owner, settings, settingsStore, timelinePanel));
+        settingsItem.addActionListener(e -> SettingsDialog.show(owner, settings, settingsStore, onDenseChange));
         menu.add(settingsItem);
 
         menu.addSeparator();

@@ -5,11 +5,12 @@ import astrogeist.persist.XmlSettingsStore;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.function.Consumer;
 
 public final class SettingsDialog extends JDialog {
 
     public SettingsDialog(JFrame owner, AppSettings settings, XmlSettingsStore store,
-                          TimelineTablePanel timelinePanel) {
+                          Consumer<Boolean> onDenseChange) {
         super(owner, "Settings", true);
         setResizable(false);
 
@@ -18,7 +19,7 @@ public final class SettingsDialog extends JDialog {
         denseBox.addActionListener(e -> {
             boolean dense = denseBox.isSelected();
             settings.setDenseMode(dense);
-            timelinePanel.setDense(dense);
+            onDenseChange.accept(dense);
             store.save(settings);
         });
 
@@ -47,7 +48,7 @@ public final class SettingsDialog extends JDialog {
     }
 
     public static void show(JFrame owner, AppSettings settings, XmlSettingsStore store,
-                            TimelineTablePanel timelinePanel) {
-        new SettingsDialog(owner, settings, store, timelinePanel).setVisible(true);
+                            Consumer<Boolean> onDenseChange) {
+        new SettingsDialog(owner, settings, store, onDenseChange).setVisible(true);
     }
 }
