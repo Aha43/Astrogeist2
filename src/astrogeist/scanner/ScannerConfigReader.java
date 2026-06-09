@@ -3,11 +3,41 @@ package astrogeist.scanner;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public final class ScannerConfigReader {
+
+    private static final List<String> BUNDLED = List.of("SharpCap", "Seestar");
+
+    public List<String> listAvailable() {
+        var names = new ArrayList<>(BUNDLED);
+        var userDir = Path.of(System.getProperty("user.home"), ".astrogeist2", "scanners");
+        if (Files.isDirectory(userDir)) {
+            try (var s = Files.list(userDir)) {
+                s.filter(p -> p.toString().endsWith(".xml"))
+                 .map(p -> p.getFileName().toString().replace(".xml", ""))
+                 .forEach(names::add);
+            } catch (IOException ignored) {}
+        }
+        return names;
+    }
+
+    public ScannerConfig read(String name) throws Exception {
+        var path = "/resources/scanners/" + name + ".xml";
+        var url = ScannerConfigReader.class.getResource(path);
+        if (url != null) {
+            try (var in = url.openStream()) { return read(in); }
+        }
+        var userPath = Path.of(System.getProperty("user.home"), ".astrogeist2", "scanners", name + ".xml");
+        if (Files.exists(userPath)) {
+            try (var in = Files.newInputStream(userPath)) { return read(in); }
+        }
+        throw new IllegalArgumentException("Unknown scanner: " + name);
+    }
 
     public ScannerConfig read(InputStream in) throws Exception {
         var doc = DocumentBuilderFactory.newInstance()
