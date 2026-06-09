@@ -53,6 +53,8 @@ public final class MenuBarFactory {
         menu.addSeparator();
 
         var quitItem = new JMenuItem("Quit");
+        quitItem.setAccelerator(KeyStroke.getKeyStroke(
+            KeyEvent.VK_Q, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
         quitItem.addActionListener(e -> System.exit(0));
         menu.add(quitItem);
 

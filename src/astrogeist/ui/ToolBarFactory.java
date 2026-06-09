@@ -52,7 +52,7 @@ public final class ToolBarFactory {
 
         bar.add(Box.createHorizontalGlue());
 
-        var exitBtn = makeButton("door-exit.svg", "Exit", "Exit");
+        var exitBtn = makeButton("door-exit.svg", "Exit", "Exit (⌘Q)");
         exitBtn.addActionListener(e -> System.exit(0));
         bar.add(exitBtn);
 
