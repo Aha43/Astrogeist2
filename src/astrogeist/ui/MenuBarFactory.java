@@ -1,7 +1,9 @@
 package astrogeist.ui;
 
 import astrogeist.persist.AppSettings;
+import astrogeist.persist.XmlScanTargetsStore;
 import astrogeist.persist.XmlSettingsStore;
+import astrogeist.scanner.ScannerConfigReader;
 
 import javax.swing.*;
 import java.awt.*;
@@ -13,13 +15,15 @@ public final class MenuBarFactory {
     private final TimelineTablePanel timelinePanel;
     private final AppSettings settings;
     private final XmlSettingsStore settingsStore;
+    private final XmlScanTargetsStore scanTargetsStore;
     private Consumer<Boolean> onDenseChange = dense -> {};
 
     public MenuBarFactory(TimelineTablePanel timelinePanel, AppSettings settings,
-                          XmlSettingsStore settingsStore) {
-        this.timelinePanel = timelinePanel;
-        this.settings      = settings;
-        this.settingsStore = settingsStore;
+                          XmlSettingsStore settingsStore, XmlScanTargetsStore scanTargetsStore) {
+        this.timelinePanel    = timelinePanel;
+        this.settings         = settings;
+        this.settingsStore    = settingsStore;
+        this.scanTargetsStore = scanTargetsStore;
     }
 
     public void setOnDenseChange(Consumer<Boolean> c) { this.onDenseChange = c; }
@@ -64,7 +68,7 @@ public final class MenuBarFactory {
     }
 
     private void scan(JFrame owner) {
-        var snapshots = new ScanConfigDialog(owner, settings, settingsStore).open();
+        var snapshots = new ScanDialog(owner, scanTargetsStore, settings, new ScannerConfigReader()).open();
         if (snapshots != null && !snapshots.isEmpty()) timelinePanel.setSnapshots(snapshots);
     }
 }

@@ -40,6 +40,9 @@ public final class XmlSettingsStore {
 
             var dense = root.getElementsByTagName("denseMode");
             if (dense.getLength() > 0) settings.setDenseMode(Boolean.parseBoolean(dense.item(0).getTextContent()));
+
+            var dataRoot = root.getElementsByTagName("dataRootFolder");
+            if (dataRoot.getLength() > 0) settings.setDataRootFolder(dataRoot.item(0).getTextContent());
         } catch (Exception ignored) {}
         return settings;
     }
@@ -72,6 +75,10 @@ public final class XmlSettingsStore {
             var denseModeEl = doc.createElement("denseMode");
             denseModeEl.setTextContent(String.valueOf(settings.isDenseMode()));
             root.appendChild(denseModeEl);
+
+            var dataRootEl = doc.createElement("dataRootFolder");
+            dataRootEl.setTextContent(settings.getDataRootFolder());
+            root.appendChild(dataRootEl);
 
             var tf = TransformerFactory.newInstance().newTransformer();
             tf.setOutputProperty(OutputKeys.INDENT, "yes");
