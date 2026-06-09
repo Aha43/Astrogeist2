@@ -1,6 +1,7 @@
 package astrogeist.ui;
 
 import astrogeist.model.Snapshot;
+import astrogeist.persist.AppSettings;
 import astrogeist.persist.ScanTarget;
 import astrogeist.persist.XmlScanTargetsStore;
 import astrogeist.scanner.ConfigurableScanner;
@@ -26,6 +27,7 @@ public final class ScanDialog extends JDialog {
     // ── targets tab ───────────────────────────────────────────────────────────
 
     private final XmlScanTargetsStore targetsStore;
+    private final AppSettings settings;
     private final List<ScanTarget> targets;
     private final TargetsModel targetsModel;
 
@@ -46,10 +48,11 @@ public final class ScanDialog extends JDialog {
     private final JButton closeBtn  = new JButton("Close");
     private final JPanel  buttonBar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-    public ScanDialog(JFrame owner, XmlScanTargetsStore targetsStore,
+    public ScanDialog(JFrame owner, XmlScanTargetsStore targetsStore, AppSettings settings,
                       ScannerConfigReader scannerReader) {
         super(owner, "Scan", true);
         this.targetsStore = targetsStore;
+        this.settings     = settings;
         this.targets      = targetsStore.load();
         this.targetsModel = new TargetsModel(targets);
 
@@ -131,8 +134,11 @@ public final class ScanDialog extends JDialog {
         browseBtn.addActionListener(e -> {
             var chooser = new JFileChooser();
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            if (!folderField.getText().isBlank())
-                chooser.setCurrentDirectory(Path.of(folderField.getText()).toFile());
+            // prefer: already-typed folder > data root setting > home
+            var start = !folderField.getText().isBlank() ? folderField.getText()
+                      : !settings.getDataRootFolder().isBlank() ? settings.getDataRootFolder()
+                      : System.getProperty("user.home");
+            chooser.setCurrentDirectory(Path.of(start).toFile());
             if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
                 folderField.setText(chooser.getSelectedFile().getAbsolutePath());
         });

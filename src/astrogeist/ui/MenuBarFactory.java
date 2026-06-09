@@ -68,7 +68,7 @@ public final class MenuBarFactory {
     }
 
     private void scan(JFrame owner) {
-        var snapshots = new ScanDialog(owner, scanTargetsStore, new ScannerConfigReader()).open();
+        var snapshots = new ScanDialog(owner, scanTargetsStore, settings, new ScannerConfigReader()).open();
         if (snapshots != null && !snapshots.isEmpty()) timelinePanel.setSnapshots(snapshots);
     }
 }
