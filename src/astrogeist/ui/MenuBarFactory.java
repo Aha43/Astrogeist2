@@ -1,6 +1,6 @@
 package astrogeist.ui;
 
-import astrogeist.model.DefaultTimeline;
+import astrogeist.persist.AppSettings;
 import astrogeist.scanner.ConfigurableScanner;
 import astrogeist.scanner.ScannerConfigReader;
 
@@ -10,9 +10,11 @@ import java.awt.*;
 public final class MenuBarFactory {
 
     private final TimelineTablePanel timelinePanel;
+    private final AppSettings settings;
 
-    public MenuBarFactory(TimelineTablePanel timelinePanel) {
+    public MenuBarFactory(TimelineTablePanel timelinePanel, AppSettings settings) {
         this.timelinePanel = timelinePanel;
+        this.settings      = settings;
     }
 
     public JMenuBar build(JFrame owner) {
@@ -24,8 +26,10 @@ public final class MenuBarFactory {
     private JMenu buildFileMenu(JFrame owner) {
         var menu = new JMenu("File");
 
-        var scanItem = new JMenuItem("Scan folder (SharpCap)…");
-        scanItem.addActionListener(e -> scanFolder(owner));
+        var scanItem = new JMenuItem("Scan…");
+        scanItem.setAccelerator(javax.swing.KeyStroke.getKeyStroke(
+            java.awt.event.KeyEvent.VK_O, java.awt.Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
+        scanItem.addActionListener(e -> scan(owner));
         menu.add(scanItem);
 
         menu.addSeparator();
@@ -37,20 +41,21 @@ public final class MenuBarFactory {
         return menu;
     }
 
-    private void scanFolder(JFrame owner) {
-        var chooser = new JFileChooser();
-        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-        chooser.setDialogTitle("Select SharpCap data folder");
-        if (chooser.showOpenDialog(owner) != JFileChooser.APPROVE_OPTION) return;
+    private void scan(JFrame owner) {
+        var dialog = new ScanConfigDialog(owner, settings.getLastFolder(), settings.getLastScanner());
+        var result = dialog.open();
+        if (result == null) return;
 
-        var root = chooser.getSelectedFile().toPath();
+        settings.setLastFolder(result.folder().toString());
+        settings.setLastScanner(result.scannerName());
+
         owner.setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
 
         SwingWorker<java.util.List<astrogeist.model.Snapshot>, Void> worker = new SwingWorker<>() {
             @Override
             protected java.util.List<astrogeist.model.Snapshot> doInBackground() throws Exception {
-                var config = new ScannerConfigReader().readBuiltin("SharpCap");
-                return new ConfigurableScanner(config).scan(root);
+                var config = new ScannerConfigReader().readBuiltin(result.scannerName());
+                return new ConfigurableScanner(config).scan(result.folder());
             }
 
             @Override
@@ -61,7 +66,7 @@ public final class MenuBarFactory {
                     timelinePanel.setSnapshots(snapshots);
                     if (snapshots.isEmpty()) {
                         JOptionPane.showMessageDialog(owner,
-                            "No SharpCap sessions found in the selected folder.",
+                            "No " + result.scannerName() + " sessions found in the selected folder.",
                             "No sessions", JOptionPane.INFORMATION_MESSAGE);
                     }
                 } catch (Exception ex) {

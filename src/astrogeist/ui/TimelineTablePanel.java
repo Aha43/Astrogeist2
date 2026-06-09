@@ -4,11 +4,14 @@ import astrogeist.model.Snapshot;
 import astrogeist.service.SnapshotSelectionService;
 
 import javax.swing.*;
+import javax.swing.event.TableColumnModelEvent;
+import javax.swing.event.TableColumnModelListener;
 import javax.swing.table.AbstractTableModel;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public final class TimelineTablePanel extends JPanel {
 
@@ -25,12 +28,13 @@ public final class TimelineTablePanel extends JPanel {
     private final List<Snapshot> snapshots = new ArrayList<>();
     private final SnapshotSelectionService selectionService;
     private final Model model = new Model();
+    private final JTable table;
 
     public TimelineTablePanel(SnapshotSelectionService selectionService) {
         this.selectionService = selectionService;
         setLayout(new java.awt.BorderLayout());
 
-        var table = new JTable(model);
+        table = new JTable(model);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_LAST_COLUMN);
         table.getColumnModel().getColumn(0).setPreferredWidth(180);
@@ -50,6 +54,33 @@ public final class TimelineTablePanel extends JPanel {
         snapshots.clear();
         snapshots.addAll(list);
         model.fireTableDataChanged();
+    }
+
+    public int[] getColumnWidths() {
+        var cm = table.getColumnModel();
+        var widths = new int[cm.getColumnCount()];
+        for (int i = 0; i < widths.length; i++) widths[i] = cm.getColumn(i).getWidth();
+        return widths;
+    }
+
+    public void setColumnWidths(int[] widths) {
+        if (widths == null || widths.length == 0) return;
+        var cm = table.getColumnModel();
+        for (int i = 0; i < widths.length && i < cm.getColumnCount(); i++) {
+            cm.getColumn(i).setPreferredWidth(widths[i]);
+        }
+    }
+
+    public void onColumnWidthChange(Consumer<int[]> listener) {
+        table.getColumnModel().addColumnModelListener(new TableColumnModelListener() {
+            @Override public void columnMarginChanged(javax.swing.event.ChangeEvent e) {
+                listener.accept(getColumnWidths());
+            }
+            @Override public void columnAdded(TableColumnModelEvent e) {}
+            @Override public void columnRemoved(TableColumnModelEvent e) {}
+            @Override public void columnMoved(TableColumnModelEvent e) {}
+            @Override public void columnSelectionChanged(javax.swing.event.ListSelectionEvent e) {}
+        });
     }
 
     private class Model extends AbstractTableModel {
