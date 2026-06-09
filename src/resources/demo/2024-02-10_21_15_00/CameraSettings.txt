@@ -1,0 +1,9 @@
+[ZWO ASI294MC Pro]
+Gain=300
+ExposureMs=60000
+Binning=1
+FPS=0.02
+FrameCount=80
+Temperature=-10
+Capture Area=4144x2822
+SharpCapVersion=4.1.8765.0

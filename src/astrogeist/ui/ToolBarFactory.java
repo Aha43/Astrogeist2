@@ -2,22 +2,25 @@ package astrogeist.ui;
 
 import astrogeist.persist.AppSettings;
 import astrogeist.persist.XmlSettingsStore;
-import astrogeist.scanner.ConfigurableScanner;
-import astrogeist.scanner.ScannerConfigReader;
+import com.formdev.flatlaf.extras.FlatSVGIcon;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
-public final class MenuBarFactory {
+public final class ToolBarFactory {
+
+    private record LabeledButton(JButton button, String label) {}
 
     private final TimelineTablePanel timelinePanel;
     private final AppSettings settings;
     private final XmlSettingsStore settingsStore;
     private Consumer<Boolean> onDenseChange = dense -> {};
+    private final List<LabeledButton> labeledButtons = new ArrayList<>();
 
-    public MenuBarFactory(TimelineTablePanel timelinePanel, AppSettings settings,
+    public ToolBarFactory(TimelineTablePanel timelinePanel, AppSettings settings,
                           XmlSettingsStore settingsStore) {
         this.timelinePanel = timelinePanel;
         this.settings      = settings;
@@ -26,43 +29,40 @@ public final class MenuBarFactory {
 
     public void setOnDenseChange(Consumer<Boolean> c) { this.onDenseChange = c; }
 
-    public JMenuBar build(JFrame owner) {
-        var bar = new JMenuBar();
-        bar.add(buildFileMenu(owner));
-        bar.add(buildHelpMenu(owner));
+    public void setDense(boolean dense) {
+        for (var lb : labeledButtons) lb.button().setText(dense ? null : lb.label());
+    }
+
+    public JToolBar build(JFrame owner) {
+        var bar = new JToolBar();
+        bar.setFloatable(false);
+
+        var scanBtn = makeButton("telescope.svg", "Scan", "Scan (⌘O)");
+        scanBtn.addActionListener(e -> scan(owner));
+        bar.add(scanBtn);
+
+        var settingsBtn = makeButton("settings.svg", "Settings", "Settings (⌘,)");
+        settingsBtn.addActionListener(e -> SettingsDialog.show(owner, settings, settingsStore, onDenseChange));
+        bar.add(settingsBtn);
+
+        bar.add(Box.createHorizontalGlue());
+
+        var exitBtn = makeButton("door-exit.svg", "Exit", "Exit");
+        exitBtn.addActionListener(e -> System.exit(0));
+        bar.add(exitBtn);
+
         return bar;
     }
 
-    private JMenu buildFileMenu(JFrame owner) {
-        var menu = new JMenu("File");
-
-        var scanItem = new JMenuItem("Scan…");
-        scanItem.setAccelerator(KeyStroke.getKeyStroke(
-            KeyEvent.VK_O, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        scanItem.addActionListener(e -> scan(owner));
-        menu.add(scanItem);
-
-        var settingsItem = new JMenuItem("Settings…");
-        settingsItem.setAccelerator(KeyStroke.getKeyStroke(
-            KeyEvent.VK_COMMA, Toolkit.getDefaultToolkit().getMenuShortcutKeyMaskEx()));
-        settingsItem.addActionListener(e -> SettingsDialog.show(owner, settings, settingsStore, onDenseChange));
-        menu.add(settingsItem);
-
-        menu.addSeparator();
-
-        var quitItem = new JMenuItem("Quit");
-        quitItem.addActionListener(e -> System.exit(0));
-        menu.add(quitItem);
-
-        return menu;
-    }
-
-    private JMenu buildHelpMenu(JFrame owner) {
-        var menu = new JMenu("Help");
-        var aboutItem = new JMenuItem("About " + astrogeist.app.AppInfo.NAME + "…");
-        aboutItem.addActionListener(e -> AboutDialog.show(owner));
-        menu.add(aboutItem);
-        return menu;
+    private JButton makeButton(String iconFile, String label, String tooltip) {
+        var url  = getClass().getResource("/icons/" + iconFile);
+        var icon = url != null ? new FlatSVGIcon(url).derive(16, 16) : null;
+        var btn  = new JButton(label, icon);
+        btn.setHorizontalTextPosition(SwingConstants.RIGHT);
+        btn.setToolTipText(tooltip);
+        btn.setFocusable(false);
+        labeledButtons.add(new LabeledButton(btn, label));
+        return btn;
     }
 
     private void scan(JFrame owner) {
@@ -78,8 +78,8 @@ public final class MenuBarFactory {
         SwingWorker<java.util.List<astrogeist.model.Snapshot>, Void> worker = new SwingWorker<>() {
             @Override
             protected java.util.List<astrogeist.model.Snapshot> doInBackground() throws Exception {
-                var config = new ScannerConfigReader().readBuiltin(result.scannerName());
-                return new ConfigurableScanner(config).scan(result.folder());
+                var config = new astrogeist.scanner.ScannerConfigReader().readBuiltin(result.scannerName());
+                return new astrogeist.scanner.ConfigurableScanner(config).scan(result.folder());
             }
 
             @Override
@@ -90,7 +90,7 @@ public final class MenuBarFactory {
                     timelinePanel.setSnapshots(snapshots);
                     if (snapshots.isEmpty()) {
                         JOptionPane.showMessageDialog(owner,
-                            "No " + result.scannerName() + " sessions found in the selected folder.",
+                            "No " + result.scannerName() + " sessions found.",
                             "No sessions", JOptionPane.INFORMATION_MESSAGE);
                     }
                 } catch (Exception ex) {

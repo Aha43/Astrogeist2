@@ -55,10 +55,12 @@ app: jar
 	mkdir -p $(APP_DIR)/lib
 	cp $(LIB_DIR)/*.jar $(APP_DIR)/lib/
 
+ARGS ?=
+
 run: app
 	java \
 		-cp "$(APP_DIR)/$(MAIN_JAR):$(APP_DIR)/lib/*" \
-		$(MAIN_CLASS)
+		$(MAIN_CLASS) $(ARGS)
 
 test: classes
 	rm -rf $(TEST_CLASSES)
