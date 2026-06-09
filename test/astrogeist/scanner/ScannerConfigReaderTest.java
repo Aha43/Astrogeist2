@@ -1,11 +1,25 @@
 package astrogeist.scanner;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.Comparator;
 import static org.junit.jupiter.api.Assertions.*;
 
 class ScannerConfigReaderTest {
 
     private final ScannerConfigReader reader = new ScannerConfigReader();
+    private Path userScannerDir;
+
+    @BeforeEach
+    void setUp() throws IOException {
+        userScannerDir = Files.createTempDirectory("astrogeist-scanners");
+    }
+
+    @AfterEach
+    void tearDown() throws IOException {
+        Files.walk(userScannerDir).sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(java.io.File::delete);
+    }
 
     @Test
     void readsSharpCapBuiltinConfig() throws Exception {
@@ -58,6 +72,19 @@ class ScannerConfigReaderTest {
         var config = reader.readBuiltin("Seestar");
         assertEquals("Seestar", config.name());
         assertEquals("folderMtime", config.timestamp().source());
+    }
+
+    @Test
+    void listAvailableContainsBundledScanners() {
+        var available = reader.listAvailable();
+        assertTrue(available.contains("SharpCap"));
+        assertTrue(available.contains("Seestar"));
+    }
+
+    @Test
+    void readByNameLoadsBuiltinScanner() throws Exception {
+        var config = reader.read("SharpCap");
+        assertEquals("SharpCap", config.name());
     }
 
     @Test

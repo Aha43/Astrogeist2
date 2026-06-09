@@ -115,6 +115,30 @@ class ConfigurableScannerTest {
         assertEquals(serName, snapshot.raw("ser_file"));
     }
 
+    @Test
+    void progressListenerReceivesOneCallPerFolder() throws IOException {
+        var calls = new java.util.ArrayList<int[]>();
+        new ConfigurableScanner(config).scan(root, (done, total, name) -> calls.add(new int[]{done, total}));
+
+        assertEquals(2, calls.size());
+        assertEquals(1, calls.get(0)[0]);
+        assertEquals(2, calls.get(0)[1]);
+        assertEquals(2, calls.get(1)[0]);
+        assertEquals(2, calls.get(1)[1]);
+    }
+
+    @Test
+    void cancelledThreadStopsScanEarly() throws Exception {
+        // pre-interrupt the thread so the scanner loop exits after the first folder
+        Thread.currentThread().interrupt();
+        try {
+            var snapshots = new ConfigurableScanner(config).scan(root, (d, t, n) -> {});
+            assertTrue(snapshots.size() < 2, "Should have stopped early after interruption");
+        } finally {
+            Thread.interrupted(); // clear flag
+        }
+    }
+
     private void createSession(String folderName, String cameraSettings) throws IOException {
         var dir = root.resolve(folderName);
         Files.createDirectory(dir);

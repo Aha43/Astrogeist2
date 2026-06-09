@@ -9,6 +9,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -22,18 +23,30 @@ public final class ConfigurableScanner {
     }
 
     public List<Snapshot> scan(Path root) throws IOException {
+        return scan(root, (done, total, name) -> {});
+    }
+
+    public List<Snapshot> scan(Path root, ScanProgressListener progress) throws IOException {
         var folderRegex = Pattern.compile(config.folderPattern());
         var pool = new DefaultTimelineValuePool();
 
+        List<Path> folders;
         try (var entries = Files.list(root)) {
-            return entries
+            folders = entries
                 .filter(Files::isDirectory)
                 .filter(p -> folderRegex.matcher(p.getFileName().toString()).matches())
-                .map(folder -> scanFolder(folder, pool))
-                .filter(s -> s != null)
-                .sorted((a, b) -> a.instant().compareTo(b.instant()))
                 .toList();
         }
+
+        var results = new ArrayList<Snapshot>();
+        for (int i = 0; i < folders.size(); i++) {
+            if (Thread.interrupted()) break;
+            progress.onProgress(i + 1, folders.size(), folders.get(i).getFileName().toString());
+            var s = scanFolder(folders.get(i), pool);
+            if (s != null) results.add(s);
+        }
+        results.sort((a, b) -> a.instant().compareTo(b.instant()));
+        return results;
     }
 
     private Snapshot scanFolder(Path folder, DefaultTimelineValuePool pool) {
