@@ -71,6 +71,10 @@ public final class TimelineTablePanel extends JPanel {
         }
     }
 
+    public void setDense(boolean dense) {
+        table.setRowHeight(dense ? 20 : 28);
+    }
+
     public void onColumnWidthChange(Consumer<int[]> listener) {
         table.getColumnModel().addColumnModelListener(new TableColumnModelListener() {
             @Override public void columnMarginChanged(javax.swing.event.ChangeEvent e) {

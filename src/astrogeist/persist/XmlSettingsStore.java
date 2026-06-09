@@ -37,6 +37,9 @@ public final class XmlSettingsStore {
                 }
                 settings.setColumnWidths(widths);
             }
+
+            var dense = root.getElementsByTagName("denseMode");
+            if (dense.getLength() > 0) settings.setDenseMode(Boolean.parseBoolean(dense.item(0).getTextContent()));
         } catch (Exception ignored) {}
         return settings;
     }
@@ -65,6 +68,10 @@ public final class XmlSettingsStore {
                 col.setAttribute("width", String.valueOf(widths[i]));
                 columns.appendChild(col);
             }
+
+            var denseModeEl = doc.createElement("denseMode");
+            denseModeEl.setTextContent(String.valueOf(settings.isDenseMode()));
+            root.appendChild(denseModeEl);
 
             var tf = TransformerFactory.newInstance().newTransformer();
             tf.setOutputProperty(OutputKeys.INDENT, "yes");
