@@ -2,6 +2,10 @@
 
 Desktop app for astrophotographers. Scans observation session folders, builds a chronological timeline, browse metadata and annotate sessions.
 
+> **Restart note:** the current code is an early experiment. Before extending
+> it, read `docs/direction.md`. That document records the approved direction
+> for a future restart and supersedes the configurable-scanner rule below.
+
 ## Build
 
 ```
@@ -38,8 +42,10 @@ lib/test/     JUnit JAR (not in git)
 
 - `engine` packages (model, scanner, persist, service) have **no Swing imports**
 - All Swing work runs on the EDT
-- Scanner behaviour is expressed as XML config files, not Java classes
-- New data sources need a new XML config, not new code
+- The two scanner rules below describe this experiment only. They are not the
+  direction approved for the restart:
+  - Scanner behaviour is expressed as XML config files, not Java classes
+  - New data sources need a new XML config, not new code
 
 ## Workflow
 
